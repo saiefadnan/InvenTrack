@@ -1,6 +1,52 @@
 @InvenTrack_HostAddress = http://localhost:5159
 
-GET {{InvenTrack_HostAddress}}/weatherforecast/
+### 1. Get all categories (should return an empty [] array initially)
+GET {{InvenTrack_HostAddress}}/api/categories
 Accept: application/json
 
 ###
+
+### 2. Create a category (should return 201 Created)
+POST {{InvenTrack_HostAddress}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "Electronics"
+}
+
+###
+
+### 3. Create a second category
+POST {{InvenTrack_HostAddress}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "Accessories"
+}
+
+###
+
+### 4. Get all categories again (should return both categories!)
+GET {{InvenTrack_HostAddress}}/api/categories
+Accept: application/json
+
+###
+
+### 5. Get single category by ID
+GET {{InvenTrack_HostAddress}}/api/categories/1
+Accept: application/json
+
+###
+
+### 6. Update a category (should return 204 No Content)
+PUT {{InvenTrack_HostAddress}}/api/categories/1
+Content-Type: application/json
+
+{
+  "name": "Consumer Electronics"
+}
+
+###
+
+### 7. Delete category #2 (should return 204 No Content)
+DELETE {{InvenTrack_HostAddress}}/api/categories/2
