@@ -17,23 +17,68 @@ public class ProductsController : ControllerBase
         _context = context;
     }
 
+    // GET: api/products?categoryId=1&inStock=true&page=1&pageSize=10
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
+    public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts(
+        [FromQuery] int? categoryId = null,
+        [FromQuery] bool? inStock = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var products = await _context.Products.Include(p => p.Category)
-        .Select(p => new ProductDto
+        IQueryable<Product> query = _context.Products.Include(p => p.Category);
+
+        if (categoryId.HasValue)
         {
-            Id = p.Id,
-            Name = p.Name,
-            Price = p.Price,
-            StockQuantity = p.StockQuantity,
-            CategoryId = p.CategoryId,
-            CategoryName = p.Category != null ? p.Category.Name : string.Empty
-        }).ToListAsync();
+            query = query.Where(p => p.CategoryId == categoryId.Value);
+        }
+
+        if (inStock.HasValue)
+        {
+            query = inStock.Value
+                ? query.Where(p => p.StockQuantity > 0)
+                : query.Where(p => p.StockQuantity == 0);
+        }
+
+        var products = await query
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category != null ? p.Category.Name : string.Empty
+            })
+            .ToListAsync();
+
         return Ok(products);
     }
 
-    [HttpGet("{id}")]
+    // GET: api/products/low-stock?threshold=5
+    [HttpGet("low-stock")]
+    public async Task<ActionResult<IEnumerable<ProductDto>>> GetLowStockProducts([FromQuery] int threshold = 5)
+    {
+        var lowStock = await _context.Products
+            .Where(p => p.StockQuantity < threshold)
+            .Include(p => p.Category)
+            .Select(p => new ProductDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                StockQuantity = p.StockQuantity,
+                CategoryId = p.CategoryId,
+                CategoryName = p.Category != null ? p.Category.Name : string.Empty
+            })
+            .ToListAsync();
+
+        return Ok(lowStock);
+    }
+
+
+    [HttpGet("{id:int}")]
     public async Task<ActionResult<ProductDto>> GetProduct(int id)
     {
         var product = await _context.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
@@ -78,7 +123,7 @@ public class ProductsController : ControllerBase
         return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, resultDto);
     }
 
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> UpdateProduct(int id, CreateProductDto dto)
     {
         var product = await _context.Products.FindAsync(id);
@@ -97,8 +142,9 @@ public class ProductsController : ControllerBase
 
     }
 
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> DeleteProduct(int id)
+
     {
         var product = await _context.Products.FindAsync(id);
         if (product == null) return NotFound();
