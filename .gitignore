@@ -488,3 +488,14 @@ $RECYCLE.BIN/
 *.db-shm
 *.db-wal
 
+# Frontend & Environment
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+.env
+.env.*
+!.env.example
+
+
