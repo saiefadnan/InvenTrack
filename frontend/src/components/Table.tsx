@@ -1,17 +1,5 @@
-export type Column<T> = {
-  key: keyof T | string;
-  label: string;
-  render?: (value: any, item: T) => React.ReactNode;
-};
+import type { TableProps } from "../types";
 
-export type TableProps<T> = {
-  columns: Column<T>[];
-  items: T[];
-  emptyMessage?: string;
-  isLoading: boolean;
-  isError: boolean;
-  keyField?: keyof T;
-};
 const Table = <T,>({
   columns,
   items,

@@ -8,12 +8,14 @@ import {
 import { useCategories } from "../hooks/useCategories";
 import Table from "../components/Table";
 import type { Product } from "../types";
+import Modal from "../components/Modal";
 
 const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState<
     number | undefined
   >();
   const [searchQuery, setSearchQuery] = useState("");
+  const [openModal, setOpenModal] = useState(false);
   const {
     data: products = [],
     isLoading: productsLoading,
@@ -39,6 +41,10 @@ const Dashboard = () => {
     if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
       deleteMutation.mutate(id);
     }
+  };
+
+  const onSubmit = () => {
+    setOpenModal(false);
   };
 
   const filteredProducts = products.filter((p) =>
@@ -75,11 +81,20 @@ const Dashboard = () => {
               Manage your catalog, stock levels, and pricing
             </p>
           </div>
-          <button className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer">
+          <button
+            onClick={() => setOpenModal(!openModal)}
+            className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer"
+          >
             + Add Product
           </button>
         </div>
 
+        <Modal
+          title="Add Product"
+          isOpen={openModal}
+          onClose={() => setOpenModal(false)}
+          onSubmit={onSubmit}
+        />
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <input
