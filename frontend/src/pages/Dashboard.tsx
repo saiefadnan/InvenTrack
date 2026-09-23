@@ -7,20 +7,39 @@ import {
 } from "../hooks/useProducts";
 import { useCategories } from "../hooks/useCategories";
 import Table from "../components/Table";
+import type { Product } from "../types";
 
 const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState<
     number | undefined
   >();
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: products = [] } = useProducts({ categoryId: selectedCategory });
-  const { data: lowStockProducts = [] } = useLowStockProducts(5);
-  const { data: categories = [] } = useCategories();
+  const {
+    data: products = [],
+    isLoading: productsLoading,
+    isError: productsError,
+  } = useProducts({ categoryId: selectedCategory });
+  const {
+    data: lowStockProducts = [],
+    isError: lowStockError,
+    isLoading: lowStockIsLoading,
+  } = useLowStockProducts(5);
+  const {
+    data: categories = [],
+    isError: categoryError,
+    isLoading: categoryIsLoading,
+  } = useCategories();
   const deleteMutation = useDeleteProduct();
 
   const totalProducts = products.length;
   const totalCategories = categories.length;
   const totalLowStock = lowStockProducts.length;
+
+  const handleDelete = (id: number, name: string) => {
+    if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
+      deleteMutation.mutate(id);
+    }
+  };
 
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -90,17 +109,99 @@ const Dashboard = () => {
             </select>
           </div>
         </div>
-        <Table
+
+        <Table<Product>
           columns={[
-            { key: "name", label: "Product" },
-            { key: "categoryName", label: "Category" },
-            { key: "price", label: "Price" },
-            { key: "stockQuantity", label: "Stock" },
-            { key: "status", label: "Status" },
-            { key: "actions", label: "Actions" },
+            {
+              key: "name",
+              label: "Product",
+              render: (_, product) => (
+                <div>
+                  <div className="text-white font-semibold">{product.name}</div>
+                  <div className="text-slate-400 text-xs">
+                    ID: #{product.id}
+                  </div>
+                </div>
+              ),
+            },
+            {
+              key: "categoryName",
+              label: "Category",
+              render: (catName) => (
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                  {catName}
+                </span>
+              ),
+            },
+            {
+              key: "price",
+              label: "Price",
+              render: (price) => `$${Number(price).toFixed(2)}`,
+            },
+            {
+              key: "stockQuantity",
+              label: "Stock",
+              render: (stock) => {
+                const qty = Number(stock);
+                return (
+                  <span
+                    className={
+                      qty <= 5 ? "text-amber-400 font-medium" : "text-slate-300"
+                    }
+                  >
+                    {qty} units
+                  </span>
+                );
+              },
+            },
+            {
+              key: "status",
+              label: "Status",
+              render: (_, product) => {
+                if (product.stockQuantity === 0) {
+                  return (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                      Out of Stock
+                    </span>
+                  );
+                }
+                if (product.stockQuantity <= 5) {
+                  return (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      Low Stock
+                    </span>
+                  );
+                }
+                return (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    In Stock
+                  </span>
+                );
+              },
+            },
+            {
+              key: "actions",
+              label: "Actions",
+              render: (_, product) => (
+                <div className="space-x-9">
+                  <button className="text-indigo-400 hover:text-indigo-300 text-xs font-medium cursor-pointer">
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => handleDelete(product.id, product.name)}
+                    disabled={deleteMutation.isPending}
+                    className="text-rose-400 hover:text-rose-300 text-xs font-medium cursor-pointer disabled:opacity-50"
+                  >
+                    Delete
+                  </button>
+                </div>
+              ),
+            },
           ]}
           items={filteredProducts}
-          deleteMutation={deleteMutation}
+          emptyMessage="No products found"
+          isLoading={productsLoading}
+          isError={productsError}
         />
       </div>
     </main>
