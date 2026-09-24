@@ -95,7 +95,7 @@ const Dashboard = () => {
         </div>
 
         <Modal<CreateProductDto>
-          title="Add New Product"
+          title="Add new product"
           fields={[
             { label: "Name", name: "name", type: "text" },
             { label: "Price", name: "price", type: "number" },
@@ -107,6 +107,7 @@ const Dashboard = () => {
           onClose={() => setOpenModal(false)}
           onSubmit={onSubmit}
         />
+        
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <input

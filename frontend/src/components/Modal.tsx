@@ -51,8 +51,24 @@ const Modal = <T extends FieldValues>({ isOpen, title, fields,onClose, onSubmit,
                     </option>
                   ))}
                 </select>
-              ) : (
-                <input {...register(field.name, {valueAsNumber: field.type === "number"})} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+              ) : field.type ==="checkbox"?
+              (
+                  field.options?.map((option) => {
+                    return (
+                      <label key={option.value} className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          {...register(field.name)}
+                          value={option.value}
+                          className="w-4 h-4 text-indigo-600 bg-slate-950 border border-slate-700 rounded focus:ring-indigo-500"
+                        >
+                        </input>
+                        <span>{option.label}</span>
+                      </label>
+                    );
+                  })
+              ): (
+                <input type={field.type} {...register(field.name, {valueAsNumber: field.type === "number"})} className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
               )}
               {errors[field.name] && <span className="text-xs text-red-400">{String(errors[field.name]?.message)}</span>}
             </label>

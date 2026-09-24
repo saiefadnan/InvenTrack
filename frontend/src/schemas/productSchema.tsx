@@ -9,6 +9,7 @@ export const createProductSchema = z.object({
   price: z.coerce.number().positive("Price must be a positive number"),
   stockQuantity: z.coerce
     .number()
+    .int("Stock quantity must be an integer")
     .nonnegative("Stock quantity must be a non-negative number"),
   categoryId: z.coerce
     .number()
@@ -16,4 +17,3 @@ export const createProductSchema = z.object({
     .positive("Category ID must be a positive number"),
 });
 
-export type createProductFormData = z.infer<typeof createProductSchema>;
