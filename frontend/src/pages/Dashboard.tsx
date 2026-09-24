@@ -1,14 +1,16 @@
 import { useState } from "react";
 import StatCard from "../components/StatCard";
 import {
+  useCreateProduct,
   useDeleteProduct,
   useLowStockProducts,
   useProducts,
 } from "../hooks/useProducts";
 import { useCategories } from "../hooks/useCategories";
 import Table from "../components/Table";
-import type { Product } from "../types";
+import type { CreateProductDto, Product } from "../types";
 import Modal from "../components/Modal";
+import { createProductSchema } from "../schemas/productSchema";
 
 const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState<
@@ -32,6 +34,7 @@ const Dashboard = () => {
     isLoading: categoryIsLoading,
   } = useCategories();
   const deleteMutation = useDeleteProduct();
+  const createProductMutation = useCreateProduct();
 
   const totalProducts = products.length;
   const totalCategories = categories.length;
@@ -43,8 +46,10 @@ const Dashboard = () => {
     }
   };
 
-  const onSubmit = () => {
+  const onSubmit = (formData:CreateProductDto) => {
     setOpenModal(false);
+    // alert(JSON.stringify(formData));
+    createProductMutation.mutate(formData);
   };
 
   const filteredProducts = products.filter((p) =>
@@ -89,8 +94,15 @@ const Dashboard = () => {
           </button>
         </div>
 
-        <Modal
-          title="Add Product"
+        <Modal<CreateProductDto>
+          title="Add New Product"
+          fields={[
+            { label: "Name", name: "name", type: "text" },
+            { label: "Price", name: "price", type: "number" },
+            { label: "Stock Quantity", name: "stockQuantity", type: "number" },
+            { label: "Category", name: "categoryId", type: "select" , options: categories.map((cat) => ({ value: cat.id, label: cat.name })) },
+          ]}
+          validationSchema={createProductSchema}
           isOpen={openModal}
           onClose={() => setOpenModal(false)}
           onSubmit={onSubmit}

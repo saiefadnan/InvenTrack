@@ -1,3 +1,5 @@
+import type { FieldValues, Path } from "react-hook-form";
+
 export interface Product {
   id: number;
   name: string;
@@ -85,10 +87,18 @@ export type TableProps<T> = {
   isError: boolean;
   keyField?: keyof T;
 };
-
-export interface ModalProps {
+export interface FieldConfig<T extends FieldValues> {
+  label: string;
+  name: Path<T>;
+  type?: "text" | "number" | "select";
+  options?: { value: string | number; label: string }[];
+}
+export interface ModalProps<T extends FieldValues> {
     isOpen: boolean;
     title: string;
+    fields: FieldConfig<T>[];
+    validationSchema: any;
     onClose: () => void;
-    onSubmit: (formData: FormData) => void;
+    onSubmit: (formData: T) => void;
 }
+
