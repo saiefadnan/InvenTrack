@@ -58,6 +58,7 @@ const Orders = () => {
             label: "Ordered Items",
             name: "orderedItems",
             type: "checkbox",
+            checkBoxFields: ["productId", "quantity"],
             options: products.map((product) => ({
               value: product.id,
               labels: [
@@ -106,9 +107,9 @@ const Orders = () => {
           {
             key: "items",
             label: "Items",
-            render: (items) => (
+            render: (items: any) => (
               <div className="flex flex-col gap-1 text-xs">
-                {items.map((item, idx) => (
+                {items?.map((item: any, idx: number) => (
                   <span key={idx} className="text-slate-300">
                     {item.quantity}x {item.productName}
                   </span>

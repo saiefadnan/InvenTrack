@@ -25,12 +25,13 @@ export const createOrderSchema = (products: Product[]) =>
       )
       .nonempty({ message: "At least one item is required" })
       .superRefine((items, ctx) => {
-        items.forEach((item, _) => {
+        items.forEach((item, index) => {
           const product = products.find((p) => p.id === item.productId);
           if (product && product.stockQuantity < item.quantity) {
             ctx.addIssue({
               code: "custom",
               message: `Only ${product.stockQuantity} left of ${product.name}`,
+              path: [index, 'quantity']
             });
           }
         });

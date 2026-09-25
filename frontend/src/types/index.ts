@@ -91,6 +91,7 @@ export interface FieldConfig<T extends FieldValues> {
   label: string;
   name: Path<T>;
   type?: "text" | "number" | "select" | "checkbox" | "date";
+  checkBoxFields?: string[];
   options?: any[];
 }
 export interface ModalProps<T extends FieldValues> {
