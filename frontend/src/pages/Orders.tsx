@@ -10,14 +10,14 @@ import { useProducts } from "../hooks/useProducts";
 const Orders = () => {
   const { data: orders = [], isLoading } = useOrders();
   const { data: customers = [] } = useCustomers();
-  const {data: products = []} = useProducts();
-  const createOrderMutation= useCreateOrder();
+  const { data: products = [] } = useProducts();
+  const createOrderMutation = useCreateOrder();
   const [openModal, setOpenModal] = useState(false);
   const onSubmit = (formData: CreateOrderDto) => {
     setOpenModal(false);
-    alert(JSON.stringify(formData));
-     createOrderMutation.mutate(formData);
-  }
+    // alert(JSON.stringify(formData)); // you’ll see the proper shape now
+    createOrderMutation.mutate(formData);
+  };
   return (
     <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
       {/* Header */}
@@ -43,17 +43,36 @@ const Orders = () => {
       </button>
 
       <Modal<CreateOrderDto>
-          title="Add new order"
-          fields={[
-            { label: "Customer", name: "customerId", type: "select", options: customers.map((customer) => ({ value: customer.id, label: customer.name }))},
-            { label: "Items", name: "items", type: "checkbox", options: products.map((product) => ({ value: product.id, label: `${product.name} (${product.stockQuantity} in stock)` }))},
-            { label: "Required Quantity", name: "requiredQuantity", type: "number" }
-          ]}
-          validationSchema={createOrderSchema}
-          isOpen={openModal}
-          onClose={() => setOpenModal(false)}
-          onSubmit={onSubmit}
-        />
+        title="Add new order"
+        fields={[
+          {
+            label: "Customer",
+            name: "customerId",
+            type: "select",
+            options: customers.map((customer) => ({
+              value: customer.id,
+              label: customer.name,
+            })),
+          },
+          {
+            label: "Ordered Items",
+            name: "orderedItems",
+            type: "checkbox",
+            options: products.map((product) => ({
+              value: product.id,
+              labels: [
+                product.name,
+                `-$${product.price}`,
+                `${product.stockQuantity} left`,
+              ],
+            })),
+          },
+        ]}
+        validationSchema={createOrderSchema(products)}
+        isOpen={openModal}
+        onClose={() => setOpenModal(false)}
+        onSubmit={onSubmit}
+      />
 
       <Table<Order>
         columns={[

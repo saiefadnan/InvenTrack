@@ -1,8 +1,8 @@
+using InvenTrack.Data;
+using InvenTrack.DTOs;
+using InvenTrack.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using InvenTrack.Data;
-using InvenTrack.Models;
-using InvenTrack.DTOs;
 
 namespace InvenTrack.Controllers;
 
@@ -85,8 +85,9 @@ public class OrdersController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<OrderDto>> CreateOrder(CreateOrderDto dto)
     {
+
         // 1. Validation: At least one item
-        if (dto.Items == null || dto.Items.Count == 0)
+        if (dto.OrderedItems == null || dto.OrderedItems.Count == 0)
         {
             return BadRequest("An order must contain at least one line item.");
         }
@@ -113,7 +114,7 @@ public class OrdersController : ControllerBase
             var orderItemDtos = new List<OrderItemDto>();
 
             // 4. Validate products, check stock, and decrement inventory
-            foreach (var itemDto in dto.Items)
+            foreach (var itemDto in dto.OrderedItems)
             {
                 var product = await _context.Products.FindAsync(itemDto.ProductId);
                 if (product == null)

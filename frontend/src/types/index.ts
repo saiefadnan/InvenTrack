@@ -52,8 +52,7 @@ export interface CreateOrderItemDto {
 
 export interface CreateOrderDto {
   customerId: number;
-  items: CreateOrderItemDto[];
-  requiredQuantity?: number;
+  orderedItems: CreateOrderItemDto[];
 }
 
 export interface DashboardStats {
@@ -92,14 +91,13 @@ export interface FieldConfig<T extends FieldValues> {
   label: string;
   name: Path<T>;
   type?: "text" | "number" | "select" | "checkbox" | "date";
-  options?: { value: string | number; label: string }[];
+  options?: any[];
 }
 export interface ModalProps<T extends FieldValues> {
-    isOpen: boolean;
-    title: string;
-    fields: FieldConfig<T>[];
-    validationSchema: any;
-    onClose: () => void;
-    onSubmit: (formData: T) => void;
+  isOpen: boolean;
+  title: string;
+  fields: FieldConfig<T>[];
+  validationSchema: any;
+  onClose: () => void;
+  onSubmit: (formData: T) => void;
 }
-

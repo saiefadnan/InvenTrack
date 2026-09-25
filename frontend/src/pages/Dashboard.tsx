@@ -23,16 +23,8 @@ const Dashboard = () => {
     isLoading: productsLoading,
     isError: productsError,
   } = useProducts({ categoryId: selectedCategory });
-  const {
-    data: lowStockProducts = [],
-    isError: lowStockError,
-    isLoading: lowStockIsLoading,
-  } = useLowStockProducts(5);
-  const {
-    data: categories = [],
-    isError: categoryError,
-    isLoading: categoryIsLoading,
-  } = useCategories();
+  const { data: lowStockProducts = [] } = useLowStockProducts(5);
+  const { data: categories = [] } = useCategories();
   const deleteMutation = useDeleteProduct();
   const createProductMutation = useCreateProduct();
 
@@ -87,7 +79,7 @@ const Dashboard = () => {
             </p>
           </div>
           <button
-            onClick={() => setOpenModal(!openModal)}
+            onClick={() => setOpenModal(true)}
             className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer"
           >
             + Add Product

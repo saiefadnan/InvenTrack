@@ -8,7 +8,7 @@ public class CreateOrderDto
     public int CustomerId { get; set; }
 
     [MinLength(1, ErrorMessage = "An order must have at least one item")]
-    public List<CreateOrderItemDto> Items { get; set; } = new();
+    public List<CreateOrderItemDto> OrderedItems { get; set; } = new();
 }
 
 public class CreateOrderItemDto
