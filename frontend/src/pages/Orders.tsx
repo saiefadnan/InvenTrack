@@ -135,6 +135,24 @@ const Orders = () => {
               </span>
             ),
           },
+          {
+            key: "actions",
+            label: "Actions",
+            render: (_, product) => (
+              <div className="space-x-9">
+                <button className="text-indigo-400 hover:text-indigo-300 text-xs font-medium cursor-pointer">
+                  Edit
+                </button>
+                <button
+                  // onClick={() => handleDelete(product.id, product.name)}
+                  // disabled={deleteMutation.isPending}
+                  className="text-rose-400 hover:text-rose-300 text-xs font-medium cursor-pointer disabled:opacity-50"
+                >
+                  Delete
+                </button>
+              </div>
+            ),
+          },
         ]}
         items={orders}
         emptyMessage="No orders found"
