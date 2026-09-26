@@ -1,7 +1,9 @@
 using InvenTrack.Data;
 using InvenTrack.DTOs;
+using InvenTrack.Hubs;
 using InvenTrack.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvenTrack.Controllers;
@@ -11,10 +13,12 @@ namespace InvenTrack.Controllers;
 public class OrdersController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IHubContext<InventoryHub> _hubContext;
 
-    public OrdersController(AppDbContext context)
+    public OrdersController(AppDbContext context, IHubContext<InventoryHub> hubContext)
     {
         _context = context;
+        _hubContext = hubContext;
     }
 
     // GET: api/orders
@@ -154,6 +158,13 @@ public class OrdersController : ControllerBase
 
             // Commit transaction if all writes succeeded
             await transaction.CommitAsync();
+            var totalRevenue = orderItemDtos.Sum(i => i.LineTotal);
+            await _hubContext.Clients.All.SendAsync("ReceiveOrderPlace", new
+            {
+                OrderId = order.Id,
+                TotalAmount = totalRevenue,
+                CustomerName = customer.Name
+            });
 
             var resultDto = new OrderDto
             {

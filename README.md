@@ -1,33 +1,72 @@
-# InvenTrack — Inventory & Order Management API
+# InvenTrack — Enterprise Inventory & Order Management System
 
-A production-grade RESTful API for inventory management and transactional order processing built with **ASP.NET Core 9** and **Entity Framework Core**. 
+[![.NET 9](https://img.shields.io/badge/.NET-9.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
+[![React 19](https://img.shields.io/badge/React-19.0-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Dapper](https://img.shields.io/badge/ORM-EF_Core_9_%2B_Dapper-E34F26)](https://github.com/DapperLib/Dapper)
+[![SignalR](https://img.shields.io/badge/Real--Time-SignalR_WebSockets-512BD4)](https://dotnet.microsoft.com/apps/aspnet/signalr)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
-InvenTrack demonstrates relational domain modeling, atomic order fulfillment with inventory deduction, server-side LINQ filtering and pagination, DTO projection, and OpenAPI documentation with Scalar.
+**InvenTrack** is a full-stack, enterprise-grade inventory and order management system built with **ASP.NET Core 9**, **Entity Framework Core 9**, **Dapper**, **SignalR WebSockets**, and a modern **React 19 + TypeScript + TanStack Query v5** single-page application.
 
----
-
-## 🌟 Key Architecture & Features
-
-- **Relational Domain Modeling**: 5 interrelated entities managing a realistic multi-table schema (`Category`, `Product`, `Customer`, `Order`, `OrderItem`), including a proper many-to-many relationship with order-time price snapshotting.
-- **DTO Pattern & API Decoupling**: Complete separation between database entities and client contracts to prevent over-posting vulnerabilities and avoid circular serialization loops.
-- **Atomic Order Placement**: Multi-entity transactional write operations that validate customer status, verify stock levels, snapshot item prices, decrement product inventory, and commit atomically.
-- **Advanced LINQ Queries**:
-  - Filtering by category and stock availability.
-  - Server-side pagination using `Skip` and `Take` over `IQueryable<T>`.
-  - Dedicated low-stock alerting queries (`/api/products/low-stock?threshold=5`).
-- **Eager Loading**: Strategic use of `.Include()` and `.ThenInclude()` to prevent N+1 query problems.
-- **Input Validation**: Data Annotations enforcing model constraints and returning RFC 7807 Problem Details on invalid input.
-- **Interactive API Documentation**: Modern API reference dashboard powered by **Scalar**.
+Designed using a **Hybrid ORM architecture** (CQRS-lite), InvenTrack leverages EF Core for transactional write operations and Dapper for sub-millisecond analytical aggregations. Real-time telemetry powered by SignalR guarantees that stock decrements and new order events instantly propagate across all connected clients via push-based cache invalidation.
 
 ---
 
-## 🛠 Tech Stack
+## 🏗 System Architecture
 
-- **Framework**: .NET 9.0 (ASP.NET Core Web API)
-- **ORM**: Entity Framework Core 9.0
-- **Database**: SQLite (local development with configurable provider)
-- **API Documentation**: Microsoft OpenAPI + Scalar
-- **Tooling**: .NET CLI, EF Core Migrations
+```
+                                      ┌──────────────────────────────────────────────┐
+                                      │              React 19 Frontend               │
+                                      │  (Vite • TypeScript • TanStack Query v5)     │
+                                      └──────┬───────────────────────────────▲───────┘
+                                             │ HTTP REST                     │ WebSockets
+                                             │ Mutations                     │ Real-time Events
+                                             ▼                               │
+┌────────────────────────────────────────────────────────────────────────────┴───────┐
+│                                ASP.NET Core 9 Web API                              │
+├────────────────────────────────────────────┬───────────────────────────────────────┤
+│               COMMAND STACK                │              QUERY STACK              │
+│        (Transactional Writes & Unit)       │     (High-Performance Analytical)     │
+│                                            │                                       │
+│          Entity Framework Core 9           │                Dapper                 │
+│   • Atomic Orders (BeginTransactionAsync)  │   • Scalar Subquery Aggregations      │
+│   • Stock Deductions & Snapshot Pricing    │   • Multi-table GROUP BY Leaderboard  │
+│   • Change Tracker & Navigation Graph      │   • Sub-millisecond Execution         │
+└─────────────────────┬──────────────────────┴───────────────────┬───────────────────┘
+                      │                                          │
+                      └───────────────────┬──────────────────────┘
+                                          │ Shared ADO.NET Connection
+                                          ▼
+                               ┌─────────────────────┐
+                               │   SQLite Database   │
+                               │   (invenTrack.db)   │
+                               └─────────────────────┘
+```
+
+---
+
+## ✨ Key Architectural Highlights
+
+### 1. Hybrid ORM Pattern (EF Core 9 + Dapper)
+- **EF Core 9 for Commands:** Manages entity graphs, foreign key relationships, migrations, and transactional write pipelines where strict ACID integrity is critical.
+- **Dapper for Queries & Reporting:** Executes raw, optimized SQL directly on the shared ADO.NET connection (`_context.Database.GetDbConnection()`). Aggregates total inventory valuation, revenue, order counts, and top-selling product leaderboards in a single database round-trip without change-tracker or expression-tree overhead.
+
+### 2. Real-Time Telemetry with SignalR (WebSockets)
+- Server-side domain event broadcasting via `IHubContext<InventoryHub>`.
+- Client-side hook (`useInventorySocket`) establishing automatic reconnecting WebSockets.
+- **Push-based Cache Invalidation:** When an order is placed or inventory changes, the server broadcasts domain events (`ReceiveOrderPlace`, `ReceiveProductUpdate`). Connected browser clients instantly invalidate their TanStack Query cache, synchronizing stock badges and KPI cards without polling.
+
+### 3. Atomic Order Processing & Snapshot Pricing
+- Orders execute within an explicit database transaction (`BeginTransactionAsync`).
+- Enforces stock availability checks and atomic inventory decrements.
+- **Snapshot Pricing:** Historical order items store the `UnitPrice` captured at order placement time rather than referencing live product prices, preventing retroactive order corruption when prices change.
+
+### 4. Modern React 19 SPA Architecture
+- **Polymorphic Table Component:** Generic `<Table<T>>` with fully typed column definitions and custom cell renderers.
+- **Dynamic Reusable Modal:** Dynamic stepper controls, checkbox item pickers, and real-time nested array validation powered by **React Hook Form** + **Zod**.
+- **60fps Animated Counters:** Custom `useCountUp` hook using native `requestAnimationFrame` with cubic ease-out deceleration for smooth KPI metric roll-ups.
+- **Tailwind CSS Enterprise Theme:** Dark-mode glassmorphic cards, contextual status badges, and responsive layouts.
 
 ---
 
@@ -39,15 +78,45 @@ Customer (1) ───< (many) Order
 Order    (1) ───< (many) OrderItem >─── (many) Product
 ```
 
-| Entity | Primary Key | Foreign Keys | Key Properties |
-| :--- | :--- | :--- | :--- |
-| **Category** | `Id` | — | `Name` |
-| **Product** | `Id` | `CategoryId` | `Name`, `Price`, `StockQuantity` |
-| **Customer** | `Id` | — | `Name`, `Email` |
-| **Order** | `Id` | `CustomerId` | `OrderDate`, `Status` |
-| **OrderItem** | `Id` | `OrderId`, `ProductId` | `Quantity`, `UnitPrice` (snapshot at order time) |
+| Entity | Key Properties | Relationships |
+| :--- | :--- | :--- |
+| **Category** | `Id`, `Name` | 1-to-many with `Product` |
+| **Product** | `Id`, `Name`, `Price`, `StockQuantity`, `CategoryId` | Belongs to `Category`, many-to-many with `Order` via `OrderItem` |
+| **Customer** | `Id`, `Name`, `Email` | 1-to-many with `Order` |
+| **Order** | `Id`, `CustomerId`, `OrderDate`, `Status` | Belongs to `Customer`, 1-to-many with `OrderItem` |
+| **OrderItem** | `Id`, `OrderId`, `ProductId`, `Quantity`, `UnitPrice` | Join entity with point-in-time price snapshot |
 
-> **Note on `OrderItem`**: `UnitPrice` is stored directly on the `OrderItem` row rather than referencing the live `Product.Price`. This preserves historical accuracy when product prices change over time.
+---
+
+## 📡 API Endpoints
+
+### 📦 Reports & Analytics (Dapper)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/reports/summary` | Subquery-aggregated inventory valuation, revenue, customer and product counts |
+| `GET` | `/api/reports/top-selling?limit=5` | Leaderboard joining products, categories, and order items sorted by units sold |
+
+### ⚡ Real-Time WebSockets (SignalR)
+| Endpoint | Protocol | Events Broadcasted |
+| :--- | :--- | :--- |
+| `/inventory` | WebSockets (SSE/Long-Polling fallback) | `ReceiveOrderPlace`, `ReceiveProductUpdate` |
+
+### 🛒 Orders & Fulfillment (EF Core)
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/orders` | List all orders with eager-loaded items and customer data |
+| `GET` | `/api/orders/{id}` | Get detailed order by ID |
+| `POST` | `/api/orders` | Place atomic order with transactional inventory deductions |
+
+### 🏷 Products & Categories
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `GET` | `/api/products` | Filtered (by category & stock) and paginated product list |
+| `GET` | `/api/products/low-stock?threshold=5` | Dedicated low-stock alert query |
+| `POST` | `/api/products` | Create product (broadcasts `ReceiveProductUpdate`) |
+| `PUT` | `/api/products/{id}` | Update product (broadcasts `ReceiveProductUpdate`) |
+| `DELETE` | `/api/products/{id}` | Delete product (broadcasts `ReceiveProductUpdate`) |
+| `GET` | `/api/categories` | List all product categories |
 
 ---
 
@@ -55,125 +124,53 @@ Order    (1) ───< (many) OrderItem >─── (many) Product
 
 ### Prerequisites
 - [.NET 9.0 SDK](https://dotnet.microsoft.com/download/dotnet/9.0)
-- EF Core CLI tool (`dotnet tool install --global dotnet-ef`)
+- [Node.js 18+](https://nodejs.org/) & `npm`
 
-### 1. Clone the Repository
+### 1. Backend Setup
 ```bash
-git clone https://github.com/saiefadnan/InvenTrack.git
-cd InvenTrack
-```
+cd backend
 
-### 2. Apply Database Migrations
-Run the EF Core migration to create your local database:
-```bash
+# Restore dependencies
+dotnet restore
+
+# Run database migrations (creates SQLite database invenTrack.db)
 dotnet ef database update
-```
-*(This automatically creates `invenTrack.db` with all tables, constraints, and indexes).*
 
-### 3. Run the Application
-```bash
-dotnet run
-```
-Or for auto-reload during development:
-```bash
+# Start backend server
 dotnet watch
 ```
+Backend runs at: **http://localhost:5159**  
+Interactive API Documentation: **http://localhost:5159/scalar/v1**
 
-### 4. Explore the API
-Once running, open the interactive Scalar API dashboard in your browser:
-👉 **http://localhost:5159/scalar/v1**
+### 2. Frontend Setup
+```bash
+cd frontend
 
----
+# Install dependencies
+npm install
 
-## 📡 API Endpoints Overview
-
-### Categories (`/api/categories`)
-- `GET /api/categories` — List all categories
-- `GET /api/categories/{id}` — Get category by ID
-- `POST /api/categories` — Create category (returns 201 Created)
-- `PUT /api/categories/{id}` — Update category (returns 204 No Content)
-- `DELETE /api/categories/{id}` — Delete category (returns 204 No Content)
-
-### Products (`/api/products`)
-- `GET /api/products?categoryId=1&inStock=true&page=1&pageSize=10` — Filtered & paginated product list
-- `GET /api/products/low-stock?threshold=5` — Alert list of products below stock threshold
-- `GET /api/products/{id}` — Get single product with flattened `CategoryName`
-- `POST /api/products` — Create product with foreign key validation
-- `PUT /api/products/{id}` — Update product
-- `DELETE /api/products/{id}` — Delete product
-
-### Customers (`/api/customers`)
-- `GET /api/customers` — List all customers
-- `GET /api/customers/{id}` — Get customer by ID
-- `POST /api/customers` — Create customer
-- `GET /api/customers/{id}/orders` — Nested resource: full order history for a customer
-
-### Orders (`/api/orders`)
-- `GET /api/orders` — List all orders with items and customer details
-- `GET /api/orders/{id}` — Get order by ID with line items and product details
-- `POST /api/orders` — Place order with atomic stock verification & decrement
-
----
-
-## 📝 Example Request & Response
-
-### Place an Order (`POST /api/orders`)
-
-**Request Payload:**
-```json
-{
-  "customerId": 1,
-  "items": [
-    {
-      "productId": 1,
-      "quantity": 2
-    },
-    {
-      "productId": 3,
-      "quantity": 1
-    }
-  ]
-}
+# Start Vite development server
+npm run dev
 ```
-
-**Response (`201 Created`):**
-```json
-{
-  "id": 1,
-  "orderDate": "2026-09-20T13:15:00Z",
-  "status": "Pending",
-  "customerId": 1,
-  "customerName": "Alice Smith",
-  "totalAmount": 199.98,
-  "items": [
-    {
-      "productId": 1,
-      "productName": "Wireless Mechanical Keyboard",
-      "quantity": 2,
-      "unitPrice": 89.99,
-      "lineTotal": 179.98
-    },
-    {
-      "productId": 3,
-      "productName": "Gaming Mouse Pad",
-      "quantity": 1,
-      "unitPrice": 20.00,
-      "lineTotal": 20.00
-    }
-  ]
-}
-```
+Frontend runs at: **http://localhost:5173**
 
 ---
 
-## 💡 Key Architectural Design Decisions
+## 🎯 Architectural Interview Defense
 
-1. **Why DTOs instead of Entities?**
-   Returning EF Core entity models directly causes recursive serialization loops (e.g. `Product` $\leftrightarrow$ `Category`). DTOs decouple the external API contract from the internal relational schema and eliminate over-posting vulnerabilities.
-2. **`IQueryable<T>` vs `IEnumerable<T>`**:
-   All filtering and pagination operations run against `IQueryable<T>`. EF Core translates expressions (`.Where()`, `.Skip()`, `.Take()`) into SQL `WHERE`, `LIMIT`, and `OFFSET` clauses. Only the requested records are returned from the database, rather than loading entire tables into memory.
-3. **Deep Eager Loading**:
-   Nested queries utilize `.Include(o => o.OrderItems).ThenInclude(oi => oi.Product)` to perform join operations upfront, preventing the performance penalty of N+1 database round-trips.
-4. **Data Consistency (Atomicity)**:
-   Order placement executes within a single unit of work. If stock verification fails for any item in an order, none of the changes are written, ensuring inventory counts remain 100% accurate.
+### 1. Why use a Hybrid ORM (EF Core + Dapper) instead of picking just one?
+> *"EF Core is ideal for commands: it provides transactional units of work (`BeginTransactionAsync`), entity lifecycle tracking, and navigation properties for complex domain writes. However, for analytical read queries with multi-table aggregations, EF Core's change tracker and expression tree compilation introduce unnecessary CPU and allocation overhead. Dapper executes raw, parameterized SQL directly on the shared ADO.NET connection and maps results into DTOs in sub-milliseconds."*
 
+### 2. Why use push-based cache invalidation over WebSockets instead of polling?
+> *"Polling wastes bandwidth and server compute by continually asking for updates when nothing has changed. By emitting lightweight SignalR domain events (`ReceiveOrderPlace`, `ReceiveProductUpdate`), connected clients only invalidate their TanStack Query cache when actual state transitions occur in the database. This keeps all users synchronized in real-time with zero polling overhead."*
+
+### 3. What is snapshot pricing and why is it mandatory in order systems?
+> *"A product's price can change over time. If an order line item simply references `Product.Price`, updating the price of a product today would retroactively alter the financial totals of orders placed last year. By snapshotting `UnitPrice` directly on the `OrderItem` record during order placement, historical accounting remains immutable and accurate."*
+
+### 4. What is the N+1 query problem, and how was it eliminated?
+> *"Without eager loading, accessing an order's line items and customer records would execute 1 query to fetch orders plus N separate queries for each order's details. In InvenTrack, queries use `.Include(o => o.OrderItems).ThenInclude(oi => oi.Product)` or Dapper multi-table joins to execute single-query joins up front."*
+
+---
+
+## 📄 License
+This project is open-source and available under the [MIT License](LICENSE).

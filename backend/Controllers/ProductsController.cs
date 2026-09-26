@@ -1,7 +1,9 @@
 using InvenTrack.Data;
 using InvenTrack.DTOs;
+using InvenTrack.Hubs;
 using InvenTrack.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 namespace InvenTrack.Controllers;
@@ -11,10 +13,12 @@ namespace InvenTrack.Controllers;
 public class ProductsController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly IHubContext<InventoryHub> _hubContext;
 
-    public ProductsController(AppDbContext context)
+    public ProductsController(AppDbContext context, IHubContext<InventoryHub> hubContext)
     {
         _context = context;
+        _hubContext = hubContext;
     }
 
     // GET: api/products?categoryId=1&inStock=true&page=1&pageSize=10
@@ -111,6 +115,13 @@ public class ProductsController : ControllerBase
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
 
+        await _hubContext.Clients.All.SendAsync("ReceiveProductUpdate", new
+        {
+            Action = "Created",
+            ProductId = product.Id,
+            product.Name
+        });
+
         var resultDto = new ProductDto
         {
             Id = product.Id,
@@ -138,6 +149,14 @@ public class ProductsController : ControllerBase
         product.CategoryId = dto.CategoryId ;
 
         await _context.SaveChangesAsync();
+
+        await _hubContext.Clients.All.SendAsync("ReceiveProductUpdate", new
+        {
+            Action = "Updated",
+            ProductId = product.Id,
+            product.Name
+        });
+
         return NoContent();
 
     }
@@ -151,6 +170,12 @@ public class ProductsController : ControllerBase
 
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
+
+        await _hubContext.Clients.All.SendAsync("ReceiveProductUpdate", new
+        {
+            Action = "Deleted",
+            ProductId = id
+        });
 
         return NoContent();
     }

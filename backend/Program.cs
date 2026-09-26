@@ -1,12 +1,15 @@
 using InvenTrack.Data;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
+using InvenTrack.Hubs;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddSignalR();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
 options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -16,8 +19,8 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:5173")
         .AllowAnyMethod()
-        .AllowAnyHeader();
-
+        .AllowAnyHeader()
+        .AllowCredentials();
     });
 });
 var app = builder.Build();
@@ -33,6 +36,7 @@ app.UseHttpsRedirection();
 
 app.UseCors("AllowFrontend");
 app.MapControllers();
+app.MapHub<InventoryHub>("/inventory");
 app.Run();
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
