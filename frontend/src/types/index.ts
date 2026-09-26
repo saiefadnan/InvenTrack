@@ -102,3 +102,35 @@ export interface ModalProps<T extends FieldValues> {
   onClose: () => void;
   onSubmit: (formData: T) => void;
 }
+
+export interface DashboardSummary {
+  totalInventoryValue: number;
+  totalRevenue: number;
+  totalOrders: number;
+  totalProducts: number;
+  totalCategories: number;
+  totalCustomers: number;
+  lowStockCount: number;
+  outOfStockCount: number;
+}
+
+export interface TopSellingProduct {
+  productId: number;
+  productName: string;
+  categoryName: string;
+  unitsSold: number;
+  totalRevenue: number;
+}
+
+export interface StatCardProps {
+    title: string;
+    value: number;
+    prefix?: string;
+    subtitle: string;
+    variant?: 'default' | 'warning' | 'success' | 'danger'
+}
+
+export interface useCountUpOptions{
+  duration?: number;
+  decimals?: number;
+}

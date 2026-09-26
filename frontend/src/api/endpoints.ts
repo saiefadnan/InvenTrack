@@ -17,4 +17,8 @@ export const ENDPOINTS = {
     byId: (id: number) => `/customers/${id}`,
     orders: (id: number) => `/customers/${id}/orders`,
   },
+  dashboard: {
+    summary: '/Reports/summary',
+    topSelling: (limit = 5) => `/Reports/top-selling?limit=${limit}`,
+  },
 } as const;

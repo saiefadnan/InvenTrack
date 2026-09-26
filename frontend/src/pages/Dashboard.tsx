@@ -3,7 +3,6 @@ import StatCard from "../components/StatCard";
 import {
   useCreateProduct,
   useDeleteProduct,
-  useLowStockProducts,
   useProducts,
 } from "../hooks/useProducts";
 import { useCategories } from "../hooks/useCategories";
@@ -11,6 +10,7 @@ import Table from "../components/Table";
 import type { CreateProductDto, Product } from "../types";
 import Modal from "../components/Modal";
 import { createProductSchema } from "../schemas/productSchema";
+import { useDashboardSummary } from "../hooks/useReports";
 
 const Dashboard = () => {
   const [selectedCategory, setSelectedCategory] = useState<
@@ -23,14 +23,17 @@ const Dashboard = () => {
     isLoading: productsLoading,
     isError: productsError,
   } = useProducts({ categoryId: selectedCategory });
-  const { data: lowStockProducts = [] } = useLowStockProducts(5);
+  const { data: dashboardSummary } = useDashboardSummary();
   const { data: categories = [] } = useCategories();
   const deleteMutation = useDeleteProduct();
   const createProductMutation = useCreateProduct();
 
-  const totalProducts = products.length;
-  const totalCategories = categories.length;
-  const totalLowStock = lowStockProducts.length;
+  const totalProducts = dashboardSummary?.totalProducts || 0;
+  const totalCategories = dashboardSummary?.totalCategories || 0;
+  const totalLowStock = dashboardSummary?.lowStockCount || 0;
+  const totalInventoryValue = dashboardSummary?.totalInventoryValue || 0;
+  const totalRevenue = dashboardSummary?.totalRevenue || 0;
+  const totalOutOfStockCount = dashboardSummary?.outOfStockCount || 0;
 
   const handleDelete = (id: number, name: string) => {
     if (window.confirm(`Are you sure you want to delete "${name}"?`)) {
@@ -38,7 +41,7 @@ const Dashboard = () => {
     }
   };
 
-  const onSubmit = (formData:CreateProductDto) => {
+  const onSubmit = (formData: CreateProductDto) => {
     setOpenModal(false);
     // alert(JSON.stringify(formData));
     createProductMutation.mutate(formData);
@@ -51,15 +54,37 @@ const Dashboard = () => {
     <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
-          title="Total Products"
-          value={totalProducts}
+          title="Total Inventory Value"
+          prefix="$"
+          value={totalInventoryValue}
           subtitle="Across all categories"
+        />
+
+        <StatCard
+          title="Out of Stock Products"
+          value={totalOutOfStockCount}
+          subtitle="Products that are currently unavailable"
+          variant="danger"
         />
         <StatCard
           title="Low Stock Items"
           value={totalLowStock}
           subtitle="Products running low"
           variant="warning"
+        />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <StatCard
+          title="Total Revenue"
+          prefix="$"
+          value={totalRevenue}
+          subtitle="Total generated sales"
+          variant="success"
+        />
+        <StatCard
+          title="Total Products"
+          value={totalProducts}
+          subtitle="Across all categories"
         />
         <StatCard
           title="Total Categories"
@@ -92,14 +117,22 @@ const Dashboard = () => {
             { label: "Name", name: "name", type: "text" },
             { label: "Price", name: "price", type: "number" },
             { label: "Stock Quantity", name: "stockQuantity", type: "number" },
-            { label: "Category", name: "categoryId", type: "select" , options: categories.map((cat) => ({ value: cat.id, label: cat.name })) },
+            {
+              label: "Category",
+              name: "categoryId",
+              type: "select",
+              options: categories.map((cat) => ({
+                value: cat.id,
+                label: cat.name,
+              })),
+            },
           ]}
           validationSchema={createProductSchema}
           isOpen={openModal}
           onClose={() => setOpenModal(false)}
           onSubmit={onSubmit}
         />
-        
+
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <input

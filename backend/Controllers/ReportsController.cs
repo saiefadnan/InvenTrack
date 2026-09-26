@@ -27,6 +27,7 @@ public class ReportsController : ControllerBase
             (SELECT COUNT(*) FROM Orders) AS TotalOrders,
             (SELECT COUNT(*) FROM Products) AS TotalProducts,  
             (SELECT COUNT(*) FROM Categories) AS TotalCategories,
+            (SELECT COUNT(*) FROM Customers) AS TotalCustomers,
             (SELECT COUNT(*) FROM Products WHERE StockQuantity > 0 AND StockQuantity <= 5) AS LowStockCount,
             (SELECT COUNT(*) FROM Products WHERE StockQuantity = 0) AS OutOfStockCount
         """;
