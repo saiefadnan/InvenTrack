@@ -11,14 +11,15 @@ import StatCard from "../components/StatCard";
 
 const Orders = () => {
   const [ordersPage, setOrdersPage] = useState(1);
+  const [productListPage, setProductTablePage] = useState(1);
+  const [openModal, setOpenModal] = useState(false);
   const { data: orderResults, isLoading } = useOrders({ page: ordersPage });
   const { data: customers = [] } = useCustomers();
-  const { data: productResults } = useProducts();
+  const { data: productResults } = useProducts({ page: productListPage });
   const createOrderMutation = useCreateOrder();
   const { data: dashboardSummary } = useDashboardSummary();
   const { data: topSellingProducts = [], isLoading: isTopSellingLoading } =
     useTopSellingReport();
-  const [openModal, setOpenModal] = useState(false);
   const onSubmit = (formData: CreateOrderDto) => {
     setOpenModal(false);
     // alert(JSON.stringify(formData)); // you’ll see the proper shape now
@@ -29,6 +30,8 @@ const Orders = () => {
   const hasNextOrders = orderResults?.hasNext || false;
   const hasPrevOrders = orderResults?.hasPrev || false;
   const products = productResults?.results || [];
+  const hasNextProducts = productResults?.hasNext || false;
+  const hasPrevProducts = productResults?.hasPrev || false;
   const totalOrders = dashboardSummary?.totalOrders || 0;
   const totalCustomers = dashboardSummary?.totalCustomers || 0;
   const totalOutOfStockCount = dashboardSummary?.outOfStockCount || 0;
@@ -92,10 +95,14 @@ const Orders = () => {
               value: product.id,
               labels: [
                 product.name,
-                `-$${product.price}`,
-                `${product.stockQuantity} left`,
+                `$${Number(product.price).toFixed(2)}`,
+                `${product.stockQuantity} in stock`,
               ],
             })),
+            hasNextOptions: hasNextProducts,
+            hasPrevOptions: hasPrevProducts,
+            onNextOptions: () => setProductTablePage((p) => p + 1),
+            onPrevOptions: () => setProductTablePage((p) => p - 1),
           },
         ]}
         validationSchema={createOrderSchema(products)}

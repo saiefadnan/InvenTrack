@@ -97,6 +97,10 @@ export interface FieldConfig<T extends FieldValues> {
   type?: "text" | "number" | "select" | "checkbox" | "date";
   checkBoxFields?: string[];
   options?: any[];
+  hasNextOptions?: boolean;
+  hasPrevOptions?: boolean;
+  onNextOptions?: () => void;
+  onPrevOptions?: () => void;
 }
 export interface ModalProps<T extends FieldValues> {
   isOpen: boolean;
