@@ -18,16 +18,20 @@ const Dashboard = () => {
   >();
   const [searchQuery, setSearchQuery] = useState("");
   const [openModal, setOpenModal] = useState(false);
+  const [productTablePage, setProductTablePage] = useState(1);
   const {
-    data: products = [],
-    isLoading: productsLoading,
+    data: productResults,
+    isLoading: productsLoading,   
     isError: productsError,
-  } = useProducts({ categoryId: selectedCategory });
+  } = useProducts({ categoryId: selectedCategory, page: productTablePage });
   const { data: dashboardSummary } = useDashboardSummary();
   const { data: categories = [] } = useCategories();
   const deleteMutation = useDeleteProduct();
   const createProductMutation = useCreateProduct();
 
+  const products = productResults?.results || [];
+  const hasNextProducts = productResults?.hasNext || false;
+  const hasPrevProducts = productResults?.hasPrev || false;
   const totalProducts = dashboardSummary?.totalProducts || 0;
   const totalCategories = dashboardSummary?.totalCategories || 0;
   const totalLowStock = dashboardSummary?.lowStockCount || 0;
@@ -250,6 +254,10 @@ const Dashboard = () => {
               ),
             },
           ]}
+          hasNext={hasNextProducts}
+          hasPrev={hasPrevProducts}
+          onNext={()=>setProductTablePage(productTablePage+1)}
+          onPrev={()=>setProductTablePage(productTablePage-1)}
           items={filteredProducts}
           emptyMessage="No products found"
           isLoading={productsLoading}

@@ -84,6 +84,10 @@ export type TableProps<T> = {
   items: T[];
   emptyMessage?: string;
   isLoading: boolean;
+  hasNext?: boolean;
+  hasPrev?: boolean;
+  onNext?: () => void;
+  onPrev?: () => void;
   isError: boolean;
   keyField?: keyof T;
 };
@@ -123,14 +127,21 @@ export interface TopSellingProduct {
 }
 
 export interface StatCardProps {
-    title: string;
-    value: number;
-    prefix?: string;
-    subtitle: string;
-    variant?: 'default' | 'warning' | 'success' | 'danger'
+  title: string;
+  value: number;
+  prefix?: string;
+  subtitle: string;
+  variant?: "default" | "warning" | "success" | "danger";
 }
 
-export interface useCountUpOptions{
+export interface useCountUpOptions {
   duration?: number;
   decimals?: number;
+}
+
+export interface PagedResult<T> {
+  count: number;
+  results: T[];
+  hasNext: boolean;
+  hasPrev: boolean;
 }

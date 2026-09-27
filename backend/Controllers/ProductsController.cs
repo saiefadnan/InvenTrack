@@ -42,7 +42,9 @@ public class ProductsController : ControllerBase
                 ? query.Where(p => p.StockQuantity > 0)
                 : query.Where(p => p.StockQuantity == 0);
         }
-
+        var totalCount = await query.CountAsync();
+        var hasNext = (page * pageSize) < totalCount;
+        var hasPrev = page > 1;
         var products = await query
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -57,7 +59,15 @@ public class ProductsController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(products);
+        var response = new PagedResult<ProductDto>
+        {
+            Count = totalCount,
+            HasNext = hasNext,
+            HasPrev = hasPrev,
+            Results = products
+        };
+
+        return Ok(response);
     }
 
     // GET: api/products/low-stock?threshold=5
@@ -145,8 +155,8 @@ public class ProductsController : ControllerBase
 
         product.Name = dto.Name ?? product.Name;
         product.Price = dto.Price;
-        product.StockQuantity = dto.StockQuantity ;
-        product.CategoryId = dto.CategoryId ;
+        product.StockQuantity = dto.StockQuantity;
+        product.CategoryId = dto.CategoryId;
 
         await _context.SaveChangesAsync();
 

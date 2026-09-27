@@ -21,11 +21,22 @@ public class OrdersController : ControllerBase
         _hubContext = hubContext;
     }
 
-    // GET: api/orders
+    // GET: api/orders?page=1&pageSize=10
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<OrderDto>>> GetOrders()
+    public async Task<ActionResult<PagedResult<OrderDto>>> GetOrders(
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 10)
     {
-        var orders = await _context.Orders
+        var query = _context.Orders.AsQueryable();
+
+        var totalCount = await query.CountAsync();
+        var hasNext = (page * pageSize) < totalCount;
+        var hasPrev = page > 1;
+
+        var orders = await query
+            .OrderByDescending(o => o.OrderDate)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Include(o => o.Customer)
             .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
@@ -47,7 +58,15 @@ public class OrdersController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(orders);
+        var response = new PagedResult<OrderDto>
+        {
+            Count = totalCount,
+            HasNext = hasNext,
+            HasPrev = hasPrev,
+            Results = orders
+        };
+
+        return Ok(response);
     }
 
     // GET: api/orders/5

@@ -10,12 +10,14 @@ import { useDashboardSummary, useTopSellingReport } from "../hooks/useReports";
 import StatCard from "../components/StatCard";
 
 const Orders = () => {
-  const { data: orders = [], isLoading } = useOrders();
+  const [ordersPage, setOrdersPage] = useState(1);
+  const { data: orderResults, isLoading } = useOrders({ page: ordersPage });
   const { data: customers = [] } = useCustomers();
-  const { data: products = [] } = useProducts();
+  const { data: productResults } = useProducts();
   const createOrderMutation = useCreateOrder();
   const { data: dashboardSummary } = useDashboardSummary();
-  const { data: topSellingProducts = [], isLoading: isTopSellingLoading } = useTopSellingReport();
+  const { data: topSellingProducts = [], isLoading: isTopSellingLoading } =
+    useTopSellingReport();
   const [openModal, setOpenModal] = useState(false);
   const onSubmit = (formData: CreateOrderDto) => {
     setOpenModal(false);
@@ -23,6 +25,10 @@ const Orders = () => {
     createOrderMutation.mutate(formData);
   };
 
+  const orders = orderResults?.results || [];
+  const hasNextOrders = orderResults?.hasNext || false;
+  const hasPrevOrders = orderResults?.hasPrev || false;
+  const products = productResults?.results || [];
   const totalOrders = dashboardSummary?.totalOrders || 0;
   const totalCustomers = dashboardSummary?.totalCustomers || 0;
   const totalOutOfStockCount = dashboardSummary?.outOfStockCount || 0;
@@ -177,6 +183,10 @@ const Orders = () => {
             ),
           },
         ]}
+        hasNext={hasNextOrders}
+        hasPrev={hasPrevOrders}
+        onNext={() => setOrdersPage((p) => p + 1)}
+        onPrev={() => setOrdersPage((p) => p - 1)}
         items={orders}
         emptyMessage="No orders found"
         isLoading={isLoading}
@@ -235,7 +245,11 @@ const Orders = () => {
             label: "Total Amount",
             render: (totalRevenue) => (
               <span className="text-white font-semibold">
-                ${Number(totalRevenue).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                $
+                {Number(totalRevenue).toLocaleString("en-US", {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
               </span>
             ),
           },
