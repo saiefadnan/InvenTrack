@@ -39,7 +39,6 @@ const Orders = () => {
           title="Total Customers"
           value={totalCustomers}
           subtitle="Across all categories"
-          variant="success"
         />
         <StatCard
           title="Out of Stock Products"

@@ -54,12 +54,12 @@ const Dashboard = () => {
     <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
-          title="Total Inventory Value"
+          title="Total Revenue"
           prefix="$"
-          value={totalInventoryValue}
-          subtitle="Across all categories"
+          value={totalRevenue}
+          subtitle="Total generated sales"
+          variant="success"
         />
-
         <StatCard
           title="Out of Stock Products"
           value={totalOutOfStockCount}
@@ -75,11 +75,10 @@ const Dashboard = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
-          title="Total Revenue"
+          title="Total Inventory Value"
           prefix="$"
-          value={totalRevenue}
-          subtitle="Total generated sales"
-          variant="success"
+          value={totalInventoryValue}
+          subtitle="Across all categories"
         />
         <StatCard
           title="Total Products"
