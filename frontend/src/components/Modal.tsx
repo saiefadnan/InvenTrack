@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import type { ModalProps } from "../types";
 import { useForm, type FieldValues } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import StepperInput from "./StepperInput";
+import Pagination from "./Pagination";
 
 const Modal = <T extends FieldValues>({
   isOpen,
@@ -177,104 +179,35 @@ const Modal = <T extends FieldValues>({
                               </label>
 
                               {/* Stepper pill */}
-                              <div className="shrink-0 inline-flex items-center bg-slate-950 border border-slate-800/90 rounded-lg p-0.5 shadow-inner">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const newVarFieldValue = Math.max(
-                                      1,
-                                      varFieldValue - 1,
+                              <StepperInput
+                                value={varFieldValue}
+                                min={1}
+                                onChange={(newVal) => {
+                                  if (!isChecked) {
+                                    setValue(
+                                      field.name as any,
+                                      [
+                                        ...currentItems,
+                                        {
+                                          [idKey]: option.value,
+                                          [valKey]: newVal,
+                                        },
+                                      ] as any,
+                                      { shouldValidate: true },
                                     );
-                                    if (isChecked) {
-                                      setValue(
-                                        field.name as any,
-                                        currentItems.map((item) =>
-                                          item[idKey] == option.value
-                                            ? {
-                                                ...item,
-                                                [valKey]: newVarFieldValue,
-                                              }
-                                            : item,
-                                        ) as any,
-                                        { shouldValidate: true },
-                                      );
-                                    } else {
-                                      setValue(
-                                        field.name as any,
-                                        [
-                                          ...currentItems,
-                                          {
-                                            [idKey]: option.value,
-                                            [valKey]: 1,
-                                          },
-                                        ] as any,
-                                        { shouldValidate: true },
-                                      );
-                                    }
-                                  }}
-                                  className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 rounded transition-colors cursor-pointer select-none text-sm font-semibold leading-none"
-                                >
-                                  −
-                                </button>
-                                <input
-                                  type="number"
-                                  value={varFieldValue}
-                                  min={1}
-                                  className="w-7 text-center bg-transparent text-white font-medium text-xs outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                  onChange={(e) => {
-                                    const val = Math.max(
-                                      1,
-                                      Number(e.target.value) || 1,
+                                  } else {
+                                    setValue(
+                                      field.name as any,
+                                      currentItems.map((item) =>
+                                        item[idKey] == option.value
+                                          ? { ...item, [valKey]: newVal }
+                                          : item,
+                                      ) as any,
+                                      { shouldValidate: true },
                                     );
-                                    if (isChecked) {
-                                      setValue(
-                                        field.name as any,
-                                        currentItems.map((item) =>
-                                          item[idKey] == option.value
-                                            ? { ...item, [valKey]: val }
-                                            : item,
-                                        ) as any,
-                                        { shouldValidate: true },
-                                      );
-                                    }
-                                  }}
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const newVarFieldValue = varFieldValue + 1;
-                                    if (!isChecked) {
-                                      setValue(
-                                        field.name as any,
-                                        [
-                                          ...currentItems,
-                                          {
-                                            [idKey]: option.value,
-                                            [valKey]: newVarFieldValue,
-                                          },
-                                        ] as any,
-                                        { shouldValidate: true },
-                                      );
-                                    } else {
-                                      setValue(
-                                        field.name as any,
-                                        currentItems.map((item) =>
-                                          item[idKey] == option.value
-                                            ? {
-                                                ...item,
-                                                [valKey]: newVarFieldValue,
-                                              }
-                                            : item,
-                                        ) as any,
-                                        { shouldValidate: true },
-                                      );
-                                    }
-                                  }}
-                                  className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800/80 rounded transition-colors cursor-pointer select-none text-sm font-semibold leading-none"
-                                >
-                                  +
-                                </button>
-                              </div>
+                                  }
+                                }}
+                              />
                             </div>
 
                             {itemError && (
@@ -287,59 +220,13 @@ const Modal = <T extends FieldValues>({
                       })}
                     </div>
                       {(field.hasNextOptions || field.hasPrevOptions) && (
-                        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-2 pt-1 text-sm text-slate-400">
-                          <p className="text-xs text-slate-400">
-                            Showing{" "}
-                            <span className="font-medium text-slate-200">
-                              {field.options?.length ?? 0}
-                            </span>{" "}
-                            {field.options?.length === 1 ? "record" : "records"}
-                          </p>
-                          <div className="inline-flex items-center gap-2">
-                            <button
-                              type="button"
-                              disabled={!field.hasPrevOptions}
-                              onClick={field.onPrevOptions}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/80 text-slate-300 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-900 disabled:hover:border-slate-800 disabled:hover:text-slate-400 text-xs font-medium rounded-lg shadow-sm transition-all cursor-pointer"
-                            >
-                              <svg
-                                className="w-3.5 h-3.5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="2"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M15.75 19.5L8.25 12l7.5-7.5"
-                                />
-                              </svg>
-                              <span>Prev</span>
-                            </button>
-                            <button
-                              type="button"
-                              disabled={!field.hasNextOptions}
-                              onClick={field.onNextOptions}
-                              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-900 border border-slate-800 hover:border-slate-700 hover:bg-slate-800/80 text-slate-300 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-slate-900 disabled:hover:border-slate-800 disabled:hover:text-slate-400 text-xs font-medium rounded-lg shadow-sm transition-all cursor-pointer"
-                            >
-                              <span>Next</span>
-                              <svg
-                                className="w-3.5 h-3.5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                strokeWidth="2"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  d="M8.25 4.5l7.5 7.5-7.5 7.5"
-                                />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
+                        <Pagination
+                          count={field.options?.length ?? 0}
+                          hasNext={!!field.hasNextOptions}
+                          hasPrev={!!field.hasPrevOptions}
+                          onNext={field.onNextOptions}
+                          onPrev={field.onPrevOptions}
+                        />
                       )}
                     </>
                   );

@@ -1,14 +1,20 @@
 import { useState } from "react";
-import StatCard from "../components/StatCard";
+import {
+  StatCard,
+  Table,
+  Modal,
+  PageHeader,
+  Badge,
+  SearchFilterBar,
+  ActionButtons,
+} from "../components";
 import {
   useCreateProduct,
   useDeleteProduct,
   useProducts,
 } from "../hooks/useProducts";
 import { useCategories } from "../hooks/useCategories";
-import Table from "../components/Table";
 import type { CreateProductDto, Product } from "../types";
-import Modal from "../components/Modal";
 import { createProductSchema } from "../schemas/productSchema";
 import { useDashboardSummary } from "../hooks/useReports";
 
@@ -47,7 +53,6 @@ const Dashboard = () => {
 
   const onSubmit = (formData: CreateProductDto) => {
     setOpenModal(false);
-    // alert(JSON.stringify(formData));
     createProductMutation.mutate(formData);
   };
 
@@ -97,22 +102,12 @@ const Dashboard = () => {
       </div>
 
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">
-              Products Inventory
-            </h2>
-            <p className="text-sm text-slate-400">
-              Manage your catalog, stock levels, and pricing
-            </p>
-          </div>
-          <button
-            onClick={() => setOpenModal(true)}
-            className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer"
-          >
-            + Add Product
-          </button>
-        </div>
+        <PageHeader
+          title="Products Inventory"
+          subtitle="Manage your catalog, stock levels, and pricing"
+          actionLabel="+ Add Product"
+          onAction={() => setOpenModal(true)}
+        />
 
         <Modal<CreateProductDto>
           title="Add new product"
@@ -136,35 +131,13 @@ const Dashboard = () => {
           onSubmit={onSubmit}
         />
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search products by name..."
-              className="w-full bg-slate-900/60 border border-slate-800 rounded-lg px-4 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors"
-            />
-          </div>
-          <div className="w-full sm:w-48">
-            <select
-              value={selectedCategory ?? ""}
-              onChange={(e) =>
-                setSelectedCategory(
-                  e.target.value ? Number(e.target.value) : undefined,
-                )
-              }
-              className="w-full bg-slate-900/60 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
-            >
-              <option value="">All Categories</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <SearchFilterBar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          categories={categories}
+        />
 
         <Table<Product>
           columns={[
@@ -184,9 +157,9 @@ const Dashboard = () => {
               key: "categoryName",
               label: "Category",
               render: (catName) => (
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+                <Badge variant="neutral" pill={false}>
                   {catName}
-                </span>
+                </Badge>
               ),
             },
             {
@@ -215,49 +188,30 @@ const Dashboard = () => {
               label: "Status",
               render: (_, product) => {
                 if (product.stockQuantity === 0) {
-                  return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
-                      Out of Stock
-                    </span>
-                  );
+                  return <Badge variant="danger">Out of Stock</Badge>;
                 }
                 if (product.stockQuantity <= 5) {
-                  return (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                      Low Stock
-                    </span>
-                  );
+                  return <Badge variant="warning">Low Stock</Badge>;
                 }
-                return (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    In Stock
-                  </span>
-                );
+                return <Badge variant="success">In Stock</Badge>;
               },
             },
             {
               key: "actions",
               label: "Actions",
               render: (_, product) => (
-                <div className="space-x-9">
-                  <button className="text-indigo-400 hover:text-indigo-300 text-xs font-medium cursor-pointer">
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product.id, product.name)}
-                    disabled={deleteMutation.isPending}
-                    className="text-rose-400 hover:text-rose-300 text-xs font-medium cursor-pointer disabled:opacity-50"
-                  >
-                    Delete
-                  </button>
-                </div>
+                <ActionButtons
+                  onEdit={() => {}}
+                  onDelete={() => handleDelete(product.id, product.name)}
+                  isDeleting={deleteMutation.isPending}
+                />
               ),
             },
           ]}
           hasNext={hasNextProducts}
           hasPrev={hasPrevProducts}
-          onNext={()=>setProductTablePage(productTablePage+1)}
-          onPrev={()=>setProductTablePage(productTablePage-1)}
+          onNext={() => setProductTablePage(productTablePage + 1)}
+          onPrev={() => setProductTablePage(productTablePage - 1)}
           items={filteredProducts}
           emptyMessage="No products found"
           isLoading={productsLoading}

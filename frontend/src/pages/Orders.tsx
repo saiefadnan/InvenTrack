@@ -1,13 +1,18 @@
 import { useState } from "react";
-import Modal from "../components/Modal";
-import Table from "../components/Table";
+import {
+  Modal,
+  Table,
+  StatCard,
+  PageHeader,
+  Badge,
+  ActionButtons,
+} from "../components";
 import { useCreateOrder, useOrders } from "../hooks/useOrders";
 import type { CreateOrderDto, Order, TopSellingProduct } from "../types";
 import { createOrderSchema } from "../schemas/orderSchema";
 import { useCustomers } from "../hooks/useCustomers";
 import { useProducts } from "../hooks/useProducts";
 import { useDashboardSummary, useTopSellingReport } from "../hooks/useReports";
-import StatCard from "../components/StatCard";
 
 const Orders = () => {
   const [ordersPage, setOrdersPage] = useState(1);
@@ -22,7 +27,6 @@ const Orders = () => {
     useTopSellingReport();
   const onSubmit = (formData: CreateOrderDto) => {
     setOpenModal(false);
-    // alert(JSON.stringify(formData)); // you’ll see the proper shape now
     createOrderMutation.mutate(formData);
   };
 
@@ -56,23 +60,14 @@ const Orders = () => {
           variant="danger"
         />
       </div>
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-white tracking-tight">
-            Orders Management
-          </h1>
-          <p className="text-sm text-slate-400">
-            View and track customer orders and stock allocations
-          </p>
-        </div>
-      </div>
-      <button
-        onClick={() => setOpenModal(true)}
-        className="inline-flex items-center justify-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg shadow-sm transition-colors cursor-pointer"
-      >
-        + Add Order
-      </button>
+      <PageHeader
+        title="Orders Management"
+        subtitle="View and track customer orders and stock allocations"
+        actionLabel="+ Add Order"
+        onAction={() => setOpenModal(true)}
+      />
 
       <Modal<CreateOrderDto>
         title="Add new order"
@@ -126,9 +121,9 @@ const Orders = () => {
             key: "customerName",
             label: "Customer",
             render: (customerName) => (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+              <Badge variant="neutral" pill={false}>
                 {customerName}
-              </span>
+              </Badge>
             ),
           },
           {
@@ -165,28 +160,24 @@ const Orders = () => {
           {
             key: "status",
             label: "Status",
-            render: (status) => (
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                {status}
-              </span>
-            ),
+            render: (status) => {
+              const variant =
+                status === "Delivered" || status === "Completed"
+                  ? "success"
+                  : status === "Cancelled"
+                  ? "danger"
+                  : "warning";
+              return <Badge variant={variant}>{status}</Badge>;
+            },
           },
           {
             key: "actions",
             label: "Actions",
-            render: (_, product) => (
-              <div className="space-x-9">
-                <button className="text-indigo-400 hover:text-indigo-300 text-xs font-medium cursor-pointer">
-                  Edit
-                </button>
-                <button
-                  // onClick={() => handleDelete(product.id, product.name)}
-                  // disabled={deleteMutation.isPending}
-                  className="text-rose-400 hover:text-rose-300 text-xs font-medium cursor-pointer disabled:opacity-50"
-                >
-                  Delete
-                </button>
-              </div>
+            render: () => (
+              <ActionButtons
+                onEdit={() => {}}
+                onDelete={() => {}}
+              />
             ),
           },
         ]}
@@ -200,16 +191,10 @@ const Orders = () => {
         isError={false}
       />
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-white tracking-tight">
-            Top selling products
-          </h1>
-          <p className="text-sm text-slate-400">
-            View and track top selling products
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        title="Top selling products"
+        subtitle="View and track top selling products"
+      />
 
       <Table<TopSellingProduct>
         columns={[
@@ -228,9 +213,9 @@ const Orders = () => {
             key: "productName",
             label: "Product Name",
             render: (productName) => (
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700">
+              <Badge variant="neutral" pill={false}>
                 {productName}
-              </span>
+              </Badge>
             ),
           },
           {
@@ -271,3 +256,4 @@ const Orders = () => {
 };
 
 export default Orders;
+
